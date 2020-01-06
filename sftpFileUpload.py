@@ -6,23 +6,25 @@ def connect_remote():
     host = '123.123.123.123'
     port = 22
     name = 'abc'
-    password = '123456'
+    key = paramiko.RSAKey.from_private_key_file('C:/Users/feng8/.ssh/id_rsa_feng')
 
     # 创建SSH对象
     ssh_client = paramiko.SSHClient()
     # 允许连接不在know_hosts文件中的主机, 第一次登录的认证信息
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     # 连接服务器
-    ssh_client.connect(hostname=host, port=port, username=name, password=password)
+    ssh_client.connect(hostname=host, port=port, username=name, pkey=key)
 
     transport = paramiko.Transport((host, port))
-    transport.connect(username=name, password=password)
+    transport.connect(username=name, pkey=key)
     return ssh_client, transport
 
 
 if __name__ == '__main__':
     local_dir = 'E:/markdown/blog/'
     remote_dir = r'/usr/local/blog/source/_posts/'
+    local_img_dir = 'E:/markdown/blog_image/'
+    remote_img_dir = r'/usr/local/nginx/html/down/image/blog/'
 
     print("=== sftp python v0.1 ===")
     print(" 连接服务器... ")
@@ -54,8 +56,13 @@ if __name__ == '__main__':
                     print(i)
             file = input("which file want to upload?\n")
             sftp_client = paramiko.SFTPClient.from_transport(sftp)
-            print(local_dir + file + '.md', remote_dir + file + '.md')
             sftp_client.put(local_dir + file + '.md', remote_dir + file + '.md')
+            # md上传完后，有图片就上传图片
+            if os.path.exists(local_img_dir + file):
+                stdin, stdout, stderr = ssh.exec_command('mkdir ' + remote_img_dir + file)
+                for basedir, sub_directory, sub_file in os.walk(local_img_dir + file):
+                    for i in sub_file:
+                        sftp_client.put(local_img_dir + file + '/' + i, remote_img_dir + file + '/' + i)
             print("ok!\n")
 
         elif int(answer) == 3:
