@@ -74,6 +74,7 @@ if __name__ == '__main__':
             sftp_client.put(local_dir + file, remote_dir + file)
 
             # md上传完后，有图片就上传图片
+            file = file[:-3]
             if os.path.exists(local_img_dir + file):
                 execute_command('mkdir ' + remote_img_dir + file)
                 for basedir, sub_directory, sub_file in os.walk(local_img_dir + file):
